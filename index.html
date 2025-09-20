@@ -42,11 +42,22 @@
       padding: 10px;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     .subject {
       font-weight: bold;
       font-size: 1.2em;
       color: #2196F3;
+    }
+    .delete-btn {
+      background: #f44336;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -75,16 +86,15 @@
   <!-- Supabase JS -->
   <script src="https://unpkg.com/@supabase/supabase-js"></script>
   <script>
-    // Step 1: Connect to Supabase
     const { createClient } = supabase;
-    const supabaseUrl = "https://gjikmybyzjbtnbesuhnw.supabase.co";   // paste your Supabase URL
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqaWtteWJ5empidG5iZXN1aG53Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNTM1MDUsImV4cCI6MjA3MzkyOTUwNX0.BkubV6bunekAZC-WM_beuZv4SoZfhIQAo5REH6tRKWM"; // paste anon public key
+    const supabaseUrl = "https://gjikmybyzjbtnbesuhnw.supabase.co";   
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqaWtteWJ5empidG5iZXN1aG53Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNTM1MDUsImV4cCI6MjA3MzkyOTUwNX0.BkubV6bunekAZC-WM_beuZv4SoZfhIQAo5REH6tRKWM"; 
     const db = createClient(supabaseUrl, supabaseKey);
 
     const form = document.getElementById("homeworkForm");
     const list = document.getElementById("homeworkList");
 
-    // Step 2: Load homework from DB
+    // Load homework
     async function loadHomework() {
       list.innerHTML = "";
       const { data, error } = await db.from("homework").select("*").order("due_date", { ascending: true });
@@ -94,14 +104,15 @@
       }
       data.forEach(item => {
         const li = document.createElement("li");
-        li.innerHTML = `<span class="subject">${item.subject}</span>: ${item.title} (Due: ${item.due_date})`;
+        li.innerHTML = `
+          <span class="subject">${item.subject}</span>: ${item.title} (Due: ${item.due_date})
+          <button class="delete-btn" onclick="deleteHomework('${item.id}')">Delete</button>
+        `;
         list.appendChild(li);
       });
     }
 
-    loadHomework();
-
-    // Step 3: Add homework to DB
+    // Add homework
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const subject = document.getElementById("subject").value;
@@ -116,6 +127,18 @@
       form.reset();
       loadHomework();
     });
+
+    // Delete homework
+    async function deleteHomework(id) {
+      const { data, error } = await db.from("homework").delete().eq("id", id);
+      if (error) {
+        alert("Error deleting homework: " + error.message);
+        return;
+      }
+      loadHomework();
+    }
+
+    loadHomework();
   </script>
 
 </body>
