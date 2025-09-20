@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Homework App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f4f6f9;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #4CAF50;
+    }
+    form {
+      margin-bottom: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    input, select, button {
+      padding: 8px;
+      margin: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      background: white;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .subject {
+      font-weight: bold;
+      font-size: 1.2em;
+      color: #2196F3;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📘 Homework App</h1>
+
+  <form id="homeworkForm">
+    <select id="subject" required>
+      <option value="">-- Select Subject --</option>
+      <option value="Telugu">Telugu</option>
+      <option value="Hindi">Hindi</option>
+      <option value="English">English</option>
+      <option value="Maths">Maths</option>
+      <option value="PS">Physical Science</option>
+      <option value="NS">Natural Science</option>
+      <option value="Social">Social</option>
+    </select>
+    <input type="text" id="title" placeholder="Homework title" required>
+    <input type="date" id="due_date" required>
+    <button type="submit">Add Homework</button>
+  </form>
+
+  <ul id="homeworkList"></ul>
+
+  <!-- Supabase JS -->
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script>
+    // Step 1: Connect to Supabase
+    const { createClient } = supabase;
+    const supabaseUrl = "https://gjikmybyzjbtnbesuhnw.supabase.co";   // paste your Supabase URL
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqaWtteWJ5empidG5iZXN1aG53Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNTM1MDUsImV4cCI6MjA3MzkyOTUwNX0.BkubV6bunekAZC-WM_beuZv4SoZfhIQAo5REH6tRKWM"; // paste anon public key
+    const db = createClient(supabaseUrl, supabaseKey);
+
+    const form = document.getElementById("homeworkForm");
+    const list = document.getElementById("homeworkList");
+
+    // Step 2: Load homework from DB
+    async function loadHomework() {
+      list.innerHTML = "";
+      const { data, error } = await db.from("homework").select("*").order("due_date", { ascending: true });
+      if (error) {
+        console.error(error);
+        return;
+      }
+      data.forEach(item => {
+        const li = document.createElement("li");
+        li.innerHTML = `<span class="subject">${item.subject}</span>: ${item.title} (Due: ${item.due_date})`;
+        list.appendChild(li);
+      });
+    }
+
+    loadHomework();
+
+    // Step 3: Add homework to DB
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const subject = document.getElementById("subject").value;
+      const title = document.getElementById("title").value;
+      const due_date = document.getElementById("due_date").value;
+
+      const { data, error } = await db.from("homework").insert([{ subject, title, due_date }]);
+      if (error) {
+        alert("Error: " + error.message);
+        return;
+      }
+      form.reset();
+      loadHomework();
+    });
+  </script>
+
+</body>
+</html>
